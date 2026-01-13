@@ -1,0 +1,108 @@
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { login } from "@/supabase/auth"
+import { ArrowRight, Lock, Mail, Loader2, AlertCircle } from "lucide-react"
+
+export default function LoginPage() {
+    const router = useRouter()
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+        setError(null)
+
+        const { error: authError } = await login(email, password)
+
+        if (authError) {
+            setError(authError.message)
+            setIsLoading(false)
+        } else {
+            router.push("/dashboard")
+        }
+    }
+
+    return (
+        <div className="min-h-screen bg-[#FDFCFB] flex flex-col items-center justify-center p-6">
+            <div className="w-full max-w-md">
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl font-black text-neutral-900 tracking-tight mb-2">Welcome Back</h1>
+                    <p className="text-neutral-500 font-medium">Manage your farm operations with ease.</p>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-neutral-100 shadow-xl shadow-neutral-100/50 p-8 md:p-10">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                                <p className="text-sm text-red-600 font-semibold leading-tight">{error}</p>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-neutral-900 uppercase tracking-widest ml-1">Email Address</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-300 group-focus-within:text-neutral-900 transition-colors" />
+                                <input
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="name@farm.com"
+                                    className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-50 rounded-xl text-sm focus:outline-none transition-all placeholder:text-neutral-300"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center px-1">
+                                <label className="text-[10px] font-bold text-neutral-900 uppercase tracking-widest">Password</label>
+                                <Link href="#" className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest hover:text-neutral-900 transition-colors">Forgot?</Link>
+                            </div>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-300 group-focus-within:text-neutral-900 transition-colors" />
+                                <input
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    className="w-full pl-12 pr-4 py-4 bg-neutral-50 border border-neutral-50 rounded-xl text-sm focus:outline-none transition-all placeholder:text-neutral-300"
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full bg-neutral-900 hover:bg-black text-white py-4 rounded-md text-sm font-bold transition-all shadow-lg shadow-neutral-200 flex items-center justify-center gap-2 group disabled:opacity-50"
+                        >
+                            {isLoading ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <>
+                                    Sign In <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
+                    </form>
+
+                    <div className="mt-8 pt-8 border-t border-neutral-50 text-center">
+                        <p className="text-sm text-neutral-400 font-medium">
+                            Don&apos;t have an account?{" "}
+                            <Link href="/register" className="text-neutral-900 font-bold hover:underline decoration-2 underline-offset-4">
+                                Create one for free
+                            </Link>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
