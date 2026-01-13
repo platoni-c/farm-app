@@ -45,7 +45,7 @@ const CropCard = ({ id, count, type, date, status, actualHarvestDate }: { id: st
     return (
         <Link href={`/crops/${id}`} className="card p-6 hover:border-neutral-200 cursor-pointer group block">
             <div className="flex justify-between items-start mb-4">
-                <span className="text-xs font-bold text-neutral-400">Crop #{id}</span>
+                <span className="text-xs font-bold text-neutral-400">{id}</span>
                 {isCompleted && (
                     <span className="text-[10px] bg-emerald-50 px-2 py-1 rounded-sm text-emerald-600 font-bold uppercase tracking-wider border border-emerald-100">
                         Harvested
@@ -250,7 +250,7 @@ const Page = async () => {
                     {typedCrops && typedCrops.length > 0 ? typedCrops.map((crop) => (
                         <CropCard
                             key={crop.id}
-                            id={crop.id}
+                            id={crop.name}
                             count={crop.present_chicks.toString()}
                             type="Chicks"
                             date={crop.expected_harvest_date ? new Date(crop.expected_harvest_date).toLocaleDateString() : 'N/A'}

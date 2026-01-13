@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
     if (
         pathname === '/' ||
         pathname.startsWith('/login') ||
+        pathname.startsWith('/register') ||
         pathname.startsWith('/auth')
     ) {
         return NextResponse.next()

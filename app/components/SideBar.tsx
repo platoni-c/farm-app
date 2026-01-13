@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { X, LayoutDashboard, Wheat, Syringe, Utensils, FileText, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
-import {createClient} from "@/supabase/client";
+import { createClient } from "@/supabase/client";
 
 interface SideBarProps {
     isOpen: boolean;
@@ -26,7 +26,7 @@ const SideBar = ({ isOpen, onClose }: SideBarProps) => {
             const { data, error } = await supabase
                 .from("users")
                 .select("full_name, email")
-                .eq("auth_id", authData.user.id)
+                .eq("id", authData.user.id)
                 .single();
 
             if (!error) {

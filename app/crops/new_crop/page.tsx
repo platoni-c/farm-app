@@ -47,6 +47,13 @@ export default function NewCropPage() {
         const data = Object.fromEntries(formData.entries());
 
         const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            setError("You must be logged in to create a crop.");
+            setIsLoading(false);
+            return;
+        }
 
         // 1. Insert Crop
         const { data: crop, error: cropError } = await supabase
@@ -57,7 +64,8 @@ export default function NewCropPage() {
                 arrival_date: data.arrival_date,
                 expected_harvest_date: data.expected_harvest_date,
                 notes: data.notes,
-                status: 'Active'
+                status: 'Active',
+                user_id: user.id
             }])
             .select()
             .single()
@@ -106,6 +114,7 @@ export default function NewCropPage() {
                     .from('feed_types')
                     .select('id, current_stock_kg')
                     .eq('name', feed.name)
+                    .eq('user_id', user.id)
                     .maybeSingle();
 
                 let typeId = typeData?.id;
@@ -117,7 +126,8 @@ export default function NewCropPage() {
                         .insert({
                             name: feed.name,
                             current_stock_kg: feed.count * 50,
-                            reorder_level_kg: feed.count // Storing bag count here as requested
+                            reorder_level_kg: feed.count, // Storing bag count here as requested
+                            user_id: user.id
                         })
                         .select('id')
                         .single();
