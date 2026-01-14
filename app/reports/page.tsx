@@ -60,17 +60,17 @@ const Page = async () => {
     }).reverse();
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Reports & Analytics</h1>
-                    <p className="text-neutral-500 mt-2 text-lg">In-depth performance analysis and farm productivity reports.</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">Reports & Analytics</h1>
+                    <p className="text-neutral-500 mt-2 text-base sm:text-lg">In-depth performance analysis and farm productivity reports.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="bg-white border border-neutral-200 text-neutral-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-neutral-50 transition-colors uppercase tracking-widest text-[10px]">
+                    <button className="flex-1 sm:flex-none justify-center bg-white border border-neutral-200 text-neutral-600 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-neutral-50 transition-colors uppercase tracking-widest text-[10px]">
                         <Filter className="w-4 h-4" /> Filter
                     </button>
-                    <button className="bg-neutral-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm uppercase tracking-widest text-[10px]">
+                    <button className="flex-1 sm:flex-none justify-center bg-neutral-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-sm uppercase tracking-widest text-[10px]">
                         <Download className="w-4 h-4" /> Export
                     </button>
                 </div>
@@ -119,8 +119,8 @@ const Page = async () => {
                         </div>
                         <PieChart className="w-6 h-6 text-neutral-200" />
                     </div>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-12 py-4">
-                        <div className="relative w-40 h-40 rounded-full border-[2px] border-neutral-50 flex items-center justify-center">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 py-4">
+                        <div className="relative w-40 h-40 shrink-0 rounded-full border-[2px] border-neutral-50 flex items-center justify-center">
                             <div className="text-center">
                                 <span className="block text-2xl font-black text-neutral-900">{((1 - mortalityRate / 100) * 100).toFixed(0)}%</span>
                                 <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Survival</span>
@@ -138,7 +138,7 @@ const Page = async () => {
                                 />
                             </svg>
                         </div>
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 sm:gap-6 w-full sm:w-auto">
                             <div className="space-y-1">
                                 <div className="flex items-center gap-3">
                                     <div className="w-3 h-3 rounded-full bg-emerald-500"></div>

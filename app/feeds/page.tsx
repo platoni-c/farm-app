@@ -87,13 +87,15 @@ export default async function Page() {
     const crops = (activeCrops || []) as Crop[];
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <header className="flex justify-between items-end mb-10">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 mb-10">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Feed Inventory</h1>
-                    <p className="text-neutral-500 mt-2 text-lg">Detailed stock management and usage analytics.</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">Feed Inventory</h1>
+                    <p className="text-neutral-500 mt-2 text-base sm:text-lg">Detailed stock management and usage analytics.</p>
                 </div>
-                <FeedManagementModals feedTypes={feedTypes} crops={crops} />
+                <div className="w-full sm:w-auto">
+                    <FeedManagementModals feedTypes={feedTypes} crops={crops} />
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -113,7 +115,7 @@ export default async function Page() {
                 </div>
                 <div className="card overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-150">
+                        <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-150">
                             <thead>
                                 <tr className="bg-neutral-50/50">
                                     <th className="py-4 px-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Action</th>

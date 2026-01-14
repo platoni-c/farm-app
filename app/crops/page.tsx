@@ -66,21 +66,21 @@ export default async function Page() {
     });
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Crop Management</h1>
-                    <p className="text-neutral-500 mt-2 text-lg">Manage your chick crops and inventory with real-time data.</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">Crop Management</h1>
+                    <p className="text-neutral-500 mt-2 text-base sm:text-lg">Manage your chick crops and inventory with real-time data.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <div className="relative">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative w-full sm:w-64">
                         <input
                             type="text"
                             placeholder="Search crops..."
-                            className="pl-4 pr-10 py-2 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 w-64 shadow-sm"
+                            className="w-full pl-4 pr-10 py-2 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm"
                         />
                     </div>
-                    <Link href="/crops/new_crop" className="bg-neutral-900 hover:bg-black text-white px-6 py-2 rounded-md text-sm font-bold transition-colors shadow-sm uppercase tracking-wider">
+                    <Link href="/crops/new_crop" className="bg-neutral-900 hover:bg-black text-white px-6 py-2 rounded-md text-sm font-bold transition-colors shadow-sm uppercase tracking-wider text-center">
                         New Crop
                     </Link>
                 </div>

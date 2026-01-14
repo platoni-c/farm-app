@@ -45,13 +45,13 @@ export default async function Page() {
     const crops = (activeCrops || []) as Crop[];
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Vaccinations</h1>
-                    <p className="text-neutral-500 mt-2 text-lg">Track and schedule vaccinations for all active batches.</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">Vaccinations</h1>
+                    <p className="text-neutral-500 mt-2 text-base sm:text-lg">Track and schedule vaccinations for all active batches.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <ScheduleVaccineModal crops={crops} />
                 </div>
             </header>
@@ -100,14 +100,14 @@ export default async function Page() {
             </div>
 
             <section className="bg-white rounded-xl border border-neutral-100 overflow-hidden shadow-sm">
-                <div className="p-6 border-b border-neutral-50 flex items-center justify-between">
+                <div className="p-6 border-b border-neutral-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <h2 className="text-xl font-bold text-neutral-800">Vaccination Schedule</h2>
-                    <div className="relative">
+                    <div className="relative w-full sm:w-48">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                         <input
                             type="text"
                             placeholder="Filter by batch..."
-                            className="pl-10 pr-4 py-1.5 bg-neutral-50 border border-neutral-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10 w-48"
+                            className="w-full pl-10 pr-4 py-1.5 bg-neutral-50 border border-neutral-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
                         />
                     </div>
                 </div>
@@ -117,7 +117,7 @@ export default async function Page() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-150">
+                        <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-150">
                             <thead>
                                 <tr className="bg-neutral-50">
                                     <th className="py-4 px-6 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Crop Name</th>

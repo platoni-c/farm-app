@@ -28,8 +28,8 @@ interface CropWithMortality extends Crop {
 }
 
 const SummaryCard = ({ title, value }: { title: string; value: React.ReactNode }) => (
-    <div className="card p-6 flex flex-col justify-between min-h-30">
-        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{title}</p>
+    <div className="card p-4 sm:p-6 flex flex-col justify-between min-h-30">
+        <p className="text-[9px] sm:text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{title}</p>
         <div className="mt-2">
             {typeof value === 'string' || typeof value === 'number' ? (
                 <h3 className="text-2xl font-black text-neutral-900">{value}</h3>
@@ -301,15 +301,15 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
         .slice(-displayCount);
 
     return (
-        <div className="p-8 max-w-7xl mx-auto">
-            <header className="mb-10 flex justify-between items-end">
+        <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+            <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">
                         {userProfile?.farm_name ? `${userProfile.farm_name}'s Overview` : "Farm Overview"}
                     </h1>
-                    <p className="text-neutral-500 mt-2 text-lg">Real-time performance and critical alerts for your poultry farm.</p>
+                    <p className="text-neutral-500 mt-2 text-base sm:text-lg">Real-time performance and critical alerts for your poultry farm.</p>
                 </div>
-                <Link href="/crops/new_crop" className="btn-primary flex items-center gap-2">
+                <Link href="/crops/new_crop" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
                     <Plus className="w-5 h-5" /> New Crop
                 </Link>
             </header>
@@ -444,7 +444,7 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
                 <div className="card overflow-hidden">
                     {activities.length > 0 ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse min-w-125">
+                            <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-125">
                                 <thead>
                                     <tr className="bg-neutral-50/50">
                                         <th className="py-4 px-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Activity</th>
