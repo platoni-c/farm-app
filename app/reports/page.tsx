@@ -1,7 +1,17 @@
-import { BarChart, Download, Filter, PieChart, TrendingDown, TrendingUp, Syringe, Utensils, Bird } from "lucide-react";
+import { BarChart, Download, Filter, PieChart, TrendingDown, TrendingUp, Syringe, Utensils, Bird, LucideIcon } from "lucide-react";
 import { createClient } from "@/supabase/server";
 
-const ReportCard = ({ title, value, change, trend, icon: Icon }: { title: string, value: string, change?: string, trend?: 'up' | 'down', icon?: any }) => (
+interface CropData {
+    name: string;
+    total_chicks: number;
+    daily_logs: {
+        mortality: number;
+        feed_consumed_kg: number;
+        avg_weight_g: number;
+    }[];
+}
+
+const ReportCard = ({ title, value, change, trend, icon: Icon }: { title: string, value: string, change?: string, trend?: 'up' | 'down', icon?: LucideIcon }) => (
     <div className="p-6 relative overflow-hidden group">
         <div className="flex justify-between items-start mb-4">
             <h3 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">{title}</h3>
@@ -41,13 +51,13 @@ const Page = async () => {
         .select(`
             name, 
             total_chicks,
-            daily_logs(mortality, feed_consumed_kg)
+            daily_logs(mortality, feed_consumed_kg, avg_weight_g)
         `)
-        .order('created_at', { ascending: false })
+        .order('arrival_date', { ascending: false })
         .limit(10);
 
-    const chartData = (recentCropsRaw || []).map(crop => {
-        const logs = (crop.daily_logs as any[]) || [];
+    const chartData = ((recentCropsRaw as unknown as CropData[]) || []).map(crop => {
+        const logs = crop.daily_logs || [];
         const totalMortality = logs.reduce((sum, log) => sum + (log.mortality || 0), 0) || 0;
         const totalFeedKg = logs.reduce((sum, log) => sum + (log.feed_consumed_kg || 0), 0) || 0;
         const peakWeight = logs.reduce((max, log) => Math.max(max, log.avg_weight_g || 0), 0) || 0;
@@ -102,7 +112,7 @@ const Page = async () => {
                                         {crop.final_count.toLocaleString()}
                                     </div>
                                     <div className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-crosshair" style={{ height: `${height}%` }}></div>
-                                    <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name.split(' ')[0]}</span>
+                                    <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
                                 </div>
                             );
                         }) : (
@@ -120,7 +130,7 @@ const Page = async () => {
                         <PieChart className="w-6 h-6 text-neutral-200" />
                     </div>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 py-4">
-                        <div className="relative w-40 h-40 shrink-0 rounded-full border-[2px] border-neutral-50 flex items-center justify-center">
+                        <div className="relative w-40 h-40 shrink-0 rounded-full border-2 border-neutral-50 flex items-center justify-center">
                             <div className="text-center">
                                 <span className="block text-2xl font-black text-neutral-900">{((1 - mortalityRate / 100) * 100).toFixed(0)}%</span>
                                 <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Survival</span>
@@ -207,7 +217,7 @@ const Page = async () => {
                                             className="w-full bg-neutral-400 hover:bg-neutral-900 rounded-t-lg transition-all duration-700 relative flex items-start justify-center pt-2"
                                             style={{ height: `${height}%` }}
                                         >
-                                            <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span className="text-[10px] font-bold text-black opacity-100 transition-opacity">
                                                 {crop.peak_weight}g
                                             </span>
                                         </div>

@@ -21,7 +21,7 @@ export default function RegisterPage() {
         try {
             await signUpAction(formData)
         } catch (e) {
-            setError(e instanceof Error ? e.message : "An error occurred")
+            console.error(e)
             setIsLoading(false)
         }
     }

@@ -47,7 +47,8 @@ export async function logFeedUsage(formData: FormData) {
             c1_bags: bagCounts['C1'],
             c2_bags: bagCounts['C2'],
             c3_bags: bagCounts['C3'],
-            log_date: new Date().toISOString()
+            log_date: new Date().toISOString(),
+            user_id: user.id
         });
 
     if (logError) throw new Error(logError.message);
@@ -130,7 +131,8 @@ export async function restockFeed(formData: FormData) {
             c1_bags: bagCounts['C1'],
             c2_bags: bagCounts['C2'],
             c3_bags: bagCounts['C3'],
-            log_date: new Date().toISOString()
+            log_date: new Date().toISOString(),
+            user_id: user.id
         });
 
     if (logError) throw new Error(logError.message);

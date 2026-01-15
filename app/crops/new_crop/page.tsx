@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { createClient } from "@/supabase/client";
+import { FeedLog } from "@/types/farm";
 
 const InputField = ({ label, name, type = "text", placeholder, options, required = true }: { label: string, name: string, type?: string, placeholder?: string, options?: string[], required?: boolean }) => (
     <div className="flex flex-col gap-2">
@@ -14,7 +15,7 @@ const InputField = ({ label, name, type = "text", placeholder, options, required
                 name={name}
                 required={required}
                 defaultValue={options?.[0]}
-                className="w-full px-4 py-3 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm appearance-none cursor-pointer"
+                className="w-full px-4 py-3 bg-white border border-neutral-600 rounded-md text-base focus:outline-none appearance-none cursor-pointer"
             >
                 {options?.map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -27,7 +28,7 @@ const InputField = ({ label, name, type = "text", placeholder, options, required
                 name={name}
                 required={required}
                 placeholder={placeholder}
-                className="w-full px-4 py-3 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm"
+                className="w-full px-4 py-3 bg-white border border-neutral-400 rounded-md text-base focus:outline-none"
             />
         )}
     </div>
@@ -37,6 +38,7 @@ export default function NewCropPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isHistorical, setIsHistorical] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -56,19 +58,23 @@ export default function NewCropPage() {
         }
 
         // 1. Insert Crop
+        const cropData = {
+            name: data.name,
+            total_chicks: parseInt(data.total_chicks as string),
+            arrival_date: data.arrival_date,
+            expected_harvest_date: data.expected_harvest_date,
+            actual_harvest_date: isHistorical ? data.actual_harvest_date : null,
+            notes: data.notes,
+            status: isHistorical ? 'Completed' : 'Active',
+            user_id: user.id
+        };
+
+        // Suppress TS error for status if needed, but 'Completed' should be valid per types
         const { data: crop, error: cropError } = await supabase
             .from('crops')
-            .insert([{
-                name: data.name,
-                total_chicks: parseInt(data.total_chicks as string),
-                arrival_date: data.arrival_date,
-                expected_harvest_date: data.expected_harvest_date,
-                notes: data.notes,
-                status: 'Active',
-                user_id: user.id
-            }])
+            .insert([cropData])
             .select()
-            .single()
+            .single();
 
         if (cropError) {
             setError(cropError.message);
@@ -100,64 +106,87 @@ export default function NewCropPage() {
             if (sourceError) console.error("Source Insert Error:", sourceError);
         }
 
-        // 3. Handle Feeds
-        const feeds = [
-            { name: 'C1', count: Number(data.c1_feeds_bags) },
-            { name: 'C2', count: Number(data.c2_feeds_bags) },
-            { name: 'C3', count: Number(data.c3_feeds_bags) },
-        ];
+        // 3. Handle Historical Data or Active Crop Feeds
+        if (isHistorical) {
+            // Create a summary Daily Log entry
+            const summaryLog = {
+                crop_id: crop.id,
+                log_date: data.actual_harvest_date,
+                mortality: Number(data.total_mortality || 0),
+                feed_consumed_kg: Number(data.total_feed_consumed_bags || 0) * 50, // Convert bags to kg
+                avg_weight_g: Number(data.avg_harvest_weight || 0),
+                notes: 'Historical Data Summary'
+            };
 
-        for (const feed of feeds) {
-            if (feed.count > 0) {
-                // First find or create the feed type
-                const { data: typeData } = await supabase
-                    .from('feed_types')
-                    .select('id, current_stock_kg')
-                    .eq('name', feed.name)
-                    .eq('user_id', user.id)
-                    .maybeSingle();
+            const { error: logError } = await supabase
+                .from('daily_logs')
+                .insert([summaryLog]);
 
-                let typeId = typeData?.id;
-                const currentStock = typeData?.current_stock_kg || 0;
+            if (logError) {
+                console.error("Historical Log Error:", logError);
+                // Non-fatal, but good to know
+            }
 
-                if (!typeId) {
-                    const { data: newType } = await supabase
+        } else {
+            // Normal Flow: Handle Feed Inventory for Active Crop
+            const feeds = [
+                { name: 'C1', count: Number(data.c1_feeds_bags) },
+                { name: 'C2', count: Number(data.c2_feeds_bags) },
+                { name: 'C3', count: Number(data.c3_feeds_bags) },
+            ];
+
+            for (const feed of feeds) {
+                if (feed.count > 0) {
+                    // First find or create the feed type
+                    const { data: typeData } = await supabase
                         .from('feed_types')
-                        .insert({
-                            name: feed.name,
-                            current_stock_kg: feed.count * 50,
-                            user_id: user.id
-                        })
-                        .select('id')
-                        .single();
-                    typeId = newType?.id;
-                } else {
-                    await supabase
-                        .from('feed_types')
-                        .update({
-                            current_stock_kg: Number(currentStock) + (feed.count * 50)
-                        })
-                        .eq('id', typeId);
-                }
+                        .select('id, current_stock_kg')
+                        .eq('name', feed.name)
+                        .eq('user_id', user.id)
+                        .maybeSingle();
 
-                if (typeId) {
-                    const logData: any = {
-                        crop_id: crop.id,
-                        feed_type_id: typeId,
-                        action: 'Restock'
-                    };
-                    if (feed.name === 'C1') logData.c1_bags = feed.count;
-                    else if (feed.name === 'C2') logData.c2_bags = feed.count;
-                    else if (feed.name === 'C3') logData.c3_bags = feed.count;
-                    else logData.c1_bags = feed.count;
+                    let typeId = typeData?.id;
+                    const currentStock = typeData?.current_stock_kg || 0;
 
-                    await supabase.from('feed_logs').insert(logData);
+                    if (!typeId) {
+                        const { data: newType } = await supabase
+                            .from('feed_types')
+                            .insert({
+                                name: feed.name,
+                                current_stock_kg: feed.count * 50,
+                                user_id: user.id
+                            })
+                            .select('id')
+                            .single();
+                        typeId = newType?.id;
+                    } else {
+                        await supabase
+                            .from('feed_types')
+                            .update({
+                                current_stock_kg: Number(currentStock) + (feed.count * 50)
+                            })
+                            .eq('id', typeId);
+                    }
+
+                    if (typeId) {
+                        const logData: Partial<FeedLog> = {
+                            crop_id: crop.id,
+                            feed_type_id: typeId,
+                            action: 'Restock'
+                        };
+                        if (feed.name === 'C1') logData.c1_bags = feed.count;
+                        else if (feed.name === 'C2') logData.c2_bags = feed.count;
+                        else if (feed.name === 'C3') logData.c3_bags = feed.count;
+                        else logData.c1_bags = feed.count;
+
+                        await supabase.from('feed_logs').insert(logData);
+                    }
                 }
             }
         }
 
         router.push("/dashboard");
-        router.refresh()
+        router.refresh();
     };
 
     return (
@@ -167,7 +196,7 @@ export default function NewCropPage() {
                     <ArrowLeft className="w-4 h-4" /> Back to Crops
                 </Link>
                 <h1 className="text-3xl font-extrabold text-neutral-900 tracking-tight">Add New Crop</h1>
-                <p className="text-neutral-500 mt-2 text-lg">Enter the details for the new chick arrival.</p>
+                <p className="text-neutral-500 mt-2 text-lg">Enter the details for {isHistorical ? 'a previous' : 'the new'} chick arrival.</p>
             </header>
 
             <div className="card p-8 md:p-12">
@@ -179,13 +208,32 @@ export default function NewCropPage() {
                         </div>
                     )}
 
+                    <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-100 flex items-center gap-4">
+                        <input
+                            type="checkbox"
+                            id="isHistorical"
+                            checked={isHistorical}
+                            onChange={(e) => setIsHistorical(e.target.checked)}
+                            className="w-5 h-5 text-neutral-900 border-neutral-300 rounded focus:ring-neutral-900"
+                        />
+                        <label htmlFor="isHistorical" className="text-sm font-bold text-neutral-700 uppercase tracking-wider cursor-pointer select-none">
+                            This is a completed / past crop (Import Data)
+                        </label>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="md:col-span-2">
                             <InputField label="Name of the Crop" name="name" placeholder="e.g. Crop #1 - Jan 2024" />
                         </div>
 
                         <InputField label="Arrival Date" name="arrival_date" type="date" />
-                        <InputField label="Expected Harvest Date" name="expected_harvest_date" type="date" />
+
+                        {isHistorical ? (
+                            <InputField label="Actual Harvest Date" name="actual_harvest_date" type="date" required={isHistorical} />
+                        ) : (
+                            <InputField label="Expected Harvest Date" name="expected_harvest_date" type="date" />
+                        )}
+
                         <div className="md:col-span-2 mt-3">
                             <InputField label="Total Amount of Chicks" name="total_chicks" type="number" placeholder="0" />
                         </div>
@@ -193,16 +241,27 @@ export default function NewCropPage() {
                         <InputField label="ANIRITA Chicks" name="normal_chicks_count" type="number" placeholder="0" />
                         <InputField label="KENCHICK Chicks" name="kenchick_chicks_count" type="number" placeholder="0" />
 
-                        <div className="md:col-span-2">
-                            <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider">
-                                Amount of Feeds Brought (50kg Bags)
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
-                                <InputField label="C1" name="c1_feeds_bags" type="number" placeholder="0" />
-                                <InputField label="C2" name="c2_feeds_bags" type="number" placeholder="0" />
-                                <InputField label="C3" name="c3_feeds_bags" type="number" placeholder="0" />
+                        {isHistorical ? (
+                            <div className="md:col-span-2 space-y-8 border-t border-neutral-100 pt-8 mt-4">
+                                <h3 className="text-lg font-bold text-neutral-900 uppercase tracking-tight">Performance Summary</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <InputField label="Total Mortality" name="total_mortality" type="number" placeholder="0" required={isHistorical} />
+                                    <InputField label="Total Feed Used (Bags)" name="total_feed_consumed_bags" type="number" placeholder="0" required={isHistorical} />
+                                    <InputField label="Avg Harvest Weight (g)" name="avg_harvest_weight" type="number" placeholder="0" required={isHistorical} />
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="md:col-span-2">
+                                <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider">
+                                    Amount of Feeds Brought (50kg Bags)
+                                </label>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                                    <InputField label="C1" name="c1_feeds_bags" type="number" placeholder="0" />
+                                    <InputField label="C2" name="c2_feeds_bags" type="number" placeholder="0" />
+                                    <InputField label="C3" name="c3_feeds_bags" type="number" placeholder="0" />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="md:col-span-2">
                             <div className="flex flex-col gap-2">
@@ -211,7 +270,7 @@ export default function NewCropPage() {
                                     id="notes"
                                     name="notes"
                                     rows={3}
-                                    className="w-full px-4 py-3 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm"
+                                    className="w-full px-4 py-3 bg-white border border-neutral-400 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm"
                                     placeholder="Any additional details..."
                                 />
                             </div>
@@ -222,12 +281,12 @@ export default function NewCropPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-neutral-900 hover:bg-black text-white py-4 rounded-md text-sm font-bold transition-all shadow-sm uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2"
+                            className={`w-full text-white bg-neutral-900 border border-neutral-400 py-4 rounded-md text-sm font-bold transition-all shadow-sm uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2 ${isHistorical ? 'bg-blue-600 hover:bg-blue-700' : 'bg-neutral-900 hover:bg-black'}`}
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
                             ) : (
-                                "Create Crop"
+                                isHistorical ? "Import Past Crop" : "Create Crop"
                             )}
                         </button>
                     </div>

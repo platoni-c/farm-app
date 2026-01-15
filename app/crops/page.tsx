@@ -55,7 +55,7 @@ export default async function Page() {
     const { data: cropsRaw } = await supabase
         .from('crops')
         .select('*, daily_logs(mortality)')
-        .order('created_at', { ascending: false });
+        .order('arrival_date', { ascending: false });
 
     const crops = (cropsRaw as (Crop & { daily_logs: { mortality: number }[] })[])?.map(crop => {
         const totalMortality = crop.daily_logs?.reduce((sum: number, log: { mortality: number }) => sum + (log.mortality || 0), 0) || 0;
@@ -72,18 +72,9 @@ export default async function Page() {
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-900 tracking-tight">Crop Management</h1>
                     <p className="text-neutral-500 mt-2 text-base sm:text-lg">Manage your chick crops and inventory with real-time data.</p>
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <div className="relative w-full sm:w-64">
-                        <input
-                            type="text"
-                            placeholder="Search crops..."
-                            className="w-full pl-4 pr-10 py-2 bg-white border border-neutral-100 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-neutral-200 shadow-sm"
-                        />
-                    </div>
-                    <Link href="/crops/new_crop" className="bg-neutral-900 hover:bg-black text-white px-6 py-2 rounded-md text-sm font-bold transition-colors shadow-sm uppercase tracking-wider text-center">
-                        New Crop
-                    </Link>
-                </div>
+                <Link href="/crops/new_crop" className="bg-neutral-900 hover:bg-black text-white px-6 py-2 rounded-md text-sm font-bold transition-colors shadow-sm uppercase tracking-wider text-center">
+                    New Crop
+                </Link>
             </header>
 
             {!crops || crops.length === 0 ? (

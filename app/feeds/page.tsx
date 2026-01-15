@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, Utensils } from "lucide-react";
+import { Clock, Utensils } from "lucide-react";
 import { createClient } from "@/supabase/server";
 import { FeedLog, FeedType, Crop } from "@/types/farm";
 import { FeedManagementModals } from "./FeedClient";
@@ -35,7 +35,6 @@ const FeedInventoryCard = ({ feedType }: { feedType: FeedType }) => {
 const FeedLogItem = ({ log, feedTypes }: { log: FeedLog, feedTypes: FeedType[] }) => {
     const feedType = feedTypes.find(ft => ft.id === log.feed_type_id);
     const totalBags = (log.c1_bags || 0) + (log.c2_bags || 0) + (log.c3_bags || 0);
-    const totalKg = totalBags * 50;
 
     const bagDetails = [
         log.c1_bags ? `${log.c1_bags} C1` : null,
@@ -69,10 +68,14 @@ export default async function Page() {
         .select('*')
         .order('name', { ascending: true });
 
+    // Fetch User
+    const { data: { user } } = await supabase.auth.getUser();
+
     // Fetch recent feed logs
     const { data: fetchedFeedLogs } = await supabase
         .from('feed_logs')
         .select('*')
+        .eq('user_id', user?.id || '')
         .order('log_date', { ascending: false })
         .limit(20);
 
@@ -115,7 +118,7 @@ export default async function Page() {
                 </div>
                 <div className="card overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-150">
+                        <table className="w-full text-left border-collapse min-w-125 sm:min-w-150">
                             <thead>
                                 <tr className="bg-neutral-50/50">
                                     <th className="py-4 px-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Action</th>

@@ -70,7 +70,8 @@ export async function recordDailyLog(cropId: string, data: {
             c1_bags: data.c1_bags || 0,
             c2_bags: data.c2_bags || 0,
             c3_bags: data.c3_bags || 0,
-            log_date: new Date().toISOString()
+            log_date: new Date().toISOString(),
+            user_id: user.id
         });
 
         // Update stocks

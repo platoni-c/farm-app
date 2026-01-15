@@ -181,14 +181,9 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
     const activeCropsDisplay = activeCrops.length > 0 ? (
         <div className="flex flex-col gap-1">
             {activeCrops.slice(0, 2).map((crop) => {
-                const arrival = new Date(crop.arrival_date);
-                const now = new Date();
-                const diffTime = Math.abs(now.getTime() - arrival.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
                 return (
                     <p key={crop.id} className="text-2xl font-bold text-neutral-900 truncate" title={crop.name}>
-                        {crop.name} <span className="text-lg text-neutral-400 font-medium">(Day {diffDays})</span>
+                        {crop.name}
                     </p>
                 );
             })}
@@ -241,11 +236,11 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
     // 4. Activity Normalization
     const activities = [
         ...feedLogs.map(log => {
-            const totalKg = ((log.c1_bags || 0) + (log.c2_bags || 0) + (log.c3_bags || 0)) * 50;
+            const totalBags = ((log.c1_bags || 0) + (log.c2_bags || 0) + (log.c3_bags || 0));
             return {
                 action: log.action === 'Restock' ? 'Feed Restocked' : 'Feed Used',
                 date: new Date(log.log_date).toLocaleDateString(),
-                details: `${totalKg}kg of ${log.feed_types?.name || 'feed'} ${log.action === 'Restock' ? 'added' : 'consumed'}`
+                details: `${totalBags} Bags of ${log.feed_types?.name || 'feed'} ${log.action === 'Restock' ? 'added' : 'consumed'}`
             };
         }),
         ...vaccinations.filter(v => v.status === 'Administered').map(v => ({
@@ -318,7 +313,7 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
                             const now = new Date();
                             const diffTime = now.getTime() - arrival.getTime();
                             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                            return <span className="text-neutral-400 font-medium"> - Day {diffDays}</span>
+                            return <span className="text-neutral-900 font-medium"> - Day {diffDays}</span>
                         })()}
                     </h1>
                     <p className="text-neutral-500 mt-2 text-base sm:text-lg">Real-time performance and critical alerts for your poultry farm.</p>
@@ -458,7 +453,7 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
                 <div className="card overflow-hidden">
                     {activities.length > 0 ? (
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse min-w-[500px] sm:min-w-125">
+                            <table className="w-full text-left border-collapse min-w-125 sm:min-w-125">
                                 <thead>
                                     <tr className="bg-neutral-50/50">
                                         <th className="py-4 px-4 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Activity</th>

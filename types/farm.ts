@@ -45,6 +45,7 @@ export interface FeedLog {
     c2_bags?: number;
     c3_bags?: number;
     log_date: string;
+    user_id?: string;
 }
 
 export type Vaccination = VaccinationSchedule;

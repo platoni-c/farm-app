@@ -20,7 +20,7 @@ export default function LoginPage() {
         try {
             await signInAction(formData)
         } catch (e) {
-            setError(e instanceof Error ? e.message : "An error occurred")
+            console.error(e)
             setIsLoading(false)
         }
     }
