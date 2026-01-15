@@ -214,7 +214,7 @@ const Page = async () => {
                                 <div key={i} className="flex flex-col items-center gap-4 flex-1 group h-full">
                                     <div className="relative w-full max-w-16 h-full flex items-end">
                                         <div
-                                            className="w-full bg-neutral-400 hover:bg-neutral-900 rounded-t-lg transition-all duration-700 relative flex items-start justify-center pt-2"
+                                            className="w-full bg-neutral-400 hover:bg-neutral-900 hover:text-white rounded-t-lg transition-all duration-700 relative flex items-start justify-center pt-2"
                                             style={{ height: `${height}%` }}
                                         >
                                             <span className="text-[10px] font-bold text-black opacity-100 transition-opacity">
