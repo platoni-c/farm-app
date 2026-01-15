@@ -186,7 +186,7 @@ const Page = async () => {
                                     <div className="absolute -top-10 bg-neutral-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10">
                                         {crop.total_feed_bags.toLocaleString()} Bags
                                     </div>
-                                    <div className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-pointer relative" style={{ height: `${height}%` }}>
+                                    <div className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-crosshair relative" style={{ height: `${height}%` }}>
                                         <div className="absolute inset-0 bg-neutral-900/5 group-hover:bg-transparent"></div>
                                     </div>
                                     <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
@@ -214,12 +214,16 @@ const Page = async () => {
                                 <div key={i} className="flex flex-col items-center gap-4 flex-1 group h-full">
                                     <div className="relative w-full max-w-16 h-full flex items-end">
                                         <div
-                                            className="w-full bg-neutral-400 hover:bg-neutral-900  rounded-t-lg transition-all duration-700 relative flex items-start justify-center pt-2"
+                                            className="w-full absolute bottom-0 h-full"
+                                            style={{ height: '100%' }}
+                                        ></div>
+                                        <div
+                                            className="w-full bg-neutral-900 rounded-t-lg transition-all duration-700 relative flex items-start justify-center cursor-crosshair pt-2"
                                             style={{ height: `${height}%` }}
                                         >
-                                            <span className="text-[10px] font-bold text-black hover:text-white opacity-100 transition-opacity">
-                                                {crop.peak_weight}g
-                                            </span>
+                                        <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {crop.peak_weight}g
+                                        </span>
                                         </div>
                                     </div>
                                     <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-widest truncate w-full text-center" title={crop.name}>

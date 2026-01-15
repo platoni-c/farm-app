@@ -422,7 +422,7 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
                             <div key={i} className="flex flex-col items-center gap-4 w-full flex-1 group h-full">
                                 <div className="relative w-full max-w-16 h-full flex items-end">
                                     <div
-                                        className="w-full bg-neutral-900/5 rounded-t-lg group-hover:bg-neutral-900/10 transition-colors absolute bottom-0 h-full"
+                                        className="w-full absolute bottom-0 h-full"
                                         style={{ height: '100%' }}
                                     ></div>
                                     <div
