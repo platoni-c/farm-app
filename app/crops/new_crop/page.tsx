@@ -128,7 +128,7 @@ export default function NewCropPage() {
             const avgHeavyG = heavyKg * 1000;
             const avgMediumG = mediumKg * 1000;
             const avgLightG = lightKg * 1000;
-            const overallAvgG = (totalKg * 1000) / liveBirds;
+            const overallAvgG = ((heavyKg + mediumKg + lightKg) / 3) * 1000;
 
             // Update local cropData object to include weights before any other ops if needed, 
             // but crop is already inserted. We need to update the crop record with the calculated weights.
