@@ -1,8 +1,8 @@
-import { Landmark } from "lucide-react";
+import { Landmark, LucideIcon } from "lucide-react";
 import { createClient } from "@/supabase/server";
 import { ProfileForm } from "./SettingsClient";
 
-const SettingSection = ({ title, description, children, icon: Icon }: { title: string, description: string, children: React.ReactNode, icon?:any }) => (
+const SettingSection = ({ title, description, children, icon: Icon }: { title: string, description: string, children: React.ReactNode, icon?: LucideIcon }) => (
     <div className="bg-white rounded-xl border border-neutral-100 shadow-sm overflow-hidden mb-10 transition-all hover:shadow-md">
         <div className="p-10 border-b border-neutral-50 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-start gap-4">
@@ -43,6 +43,10 @@ const Page = async () => {
             >
                 <ProfileForm initialData={profile || {}} />
             </SettingSection>
+            <button
+                className="px-4 py-2 bg-neutral-900 hover:bg-neutral-50 text-white hover:text-neutral-900 border border-neutral-950">
+                Log Out
+            </button>
             <div className="mb-20 py-10 border-t border-neutral-50 flex justify-center italic text-neutral-300 text-sm font-medium">
                 System Version 1.0.0 • Stable Cloud Build
             </div>

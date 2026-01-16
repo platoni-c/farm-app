@@ -108,12 +108,18 @@ export default function NewCropPage() {
 
         // 3. Handle Historical Data or Active Crop Feeds
         if (isHistorical) {
+            // Calculate total bags and convert details
+            const c1Bags = Number(data.c1_feeds_consumed_bags || 0);
+            const c2Bags = Number(data.c2_feeds_consumed_bags || 0);
+            const c3Bags = Number(data.c3_feeds_consumed_bags || 0);
+            const totalBags = c1Bags + c2Bags + c3Bags;
+
             // Create a summary Daily Log entry
             const summaryLog = {
                 crop_id: crop.id,
                 log_date: data.actual_harvest_date,
                 mortality: Number(data.total_mortality || 0),
-                feed_consumed_kg: Number(data.total_feed_consumed_bags || 0) * 50, // Convert bags to kg
+                feed_consumed_kg: totalBags * 50, // Convert bags to kg
                 avg_weight_g: Number(data.avg_harvest_weight || 0),
                 notes: 'Historical Data Summary'
             };
@@ -124,7 +130,54 @@ export default function NewCropPage() {
 
             if (logError) {
                 console.error("Historical Log Error:", logError);
-                // Non-fatal, but good to know
+            }
+
+            // Record detailed feed usage in feed_logs
+            const feedUsages = [
+                { name: 'C1', count: c1Bags },
+                { name: 'C2', count: c2Bags },
+                { name: 'C3', count: c3Bags },
+            ];
+
+            for (const feed of feedUsages) {
+                if (feed.count > 0) {
+                    // Find or create feed type (idempotent check)
+                    const { data: typeData } = await supabase
+                        .from('feed_types')
+                        .select('id')
+                        .eq('name', feed.name)
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+
+                    let typeId = typeData?.id;
+
+                    if (!typeId) {
+                        const { data: newType } = await supabase
+                            .from('feed_types')
+                            .insert({
+                                name: feed.name,
+                                current_stock_kg: 0, // No stock for historical
+                                user_id: user.id
+                            })
+                            .select('id')
+                            .single();
+                        typeId = newType?.id;
+                    }
+
+                    if (typeId) {
+                        const logData: Partial<FeedLog> = {
+                            crop_id: crop.id,
+                            feed_type_id: typeId,
+                            action: 'Usage',
+                            log_date: data.actual_harvest_date as string,
+                        };
+                        if (feed.name === 'C1') logData.c1_bags = feed.count;
+                        else if (feed.name === 'C2') logData.c2_bags = feed.count;
+                        else if (feed.name === 'C3') logData.c3_bags = feed.count;
+
+                        await supabase.from('feed_logs').insert(logData);
+                    }
+                }
             }
 
         } else {
@@ -244,10 +297,20 @@ export default function NewCropPage() {
                         {isHistorical ? (
                             <div className="md:col-span-2 space-y-8 border-t border-neutral-100 pt-8 mt-4">
                                 <h3 className="text-lg font-bold text-neutral-900 uppercase tracking-tight">Performance Summary</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <InputField label="Total Mortality" name="total_mortality" type="number" placeholder="0" required={isHistorical} />
-                                    <InputField label="Total Feed Used (Bags)" name="total_feed_consumed_bags" type="number" placeholder="0" required={isHistorical} />
                                     <InputField label="Avg Harvest Weight (g)" name="avg_harvest_weight" type="number" placeholder="0" required={isHistorical} />
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider block mb-2">
+                                        Total Feed Used (Bags)
+                                    </label>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <InputField label="C1" name="c1_feeds_consumed_bags" type="number" placeholder="0" />
+                                        <InputField label="C2" name="c2_feeds_consumed_bags" type="number" placeholder="0" />
+                                        <InputField label="C3" name="c3_feeds_consumed_bags" type="number" placeholder="0" />
+                                    </div>
                                 </div>
                             </div>
                         ) : (

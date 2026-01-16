@@ -9,6 +9,12 @@ interface CropData {
         feed_consumed_kg: number;
         avg_weight_g: number;
     }[];
+    feed_logs: {
+        action: string;
+        c1_bags: number;
+        c2_bags: number;
+        c3_bags: number;
+    }[];
 }
 
 const ReportCard = ({ title, value, change, trend, icon: Icon }: { title: string, value: string, change?: string, trend?: 'up' | 'down', icon?: LucideIcon }) => (
@@ -51,7 +57,8 @@ const Page = async () => {
         .select(`
             name, 
             total_chicks,
-            daily_logs(mortality, feed_consumed_kg, avg_weight_g)
+            daily_logs(mortality, feed_consumed_kg, avg_weight_g),
+            feed_logs(action, c1_bags, c2_bags, c3_bags)
         `)
         .order('arrival_date', { ascending: false })
         .limit(10);
@@ -61,10 +68,26 @@ const Page = async () => {
         const totalMortality = logs.reduce((sum, log) => sum + (log.mortality || 0), 0) || 0;
         const totalFeedKg = logs.reduce((sum, log) => sum + (log.feed_consumed_kg || 0), 0) || 0;
         const peakWeight = logs.reduce((max, log) => Math.max(max, log.avg_weight_g || 0), 0) || 0;
+
+        // Feed logs processing
+        const feedLogs = crop.feed_logs || [];
+        const c1 = feedLogs.filter(l => l.action === 'Usage').reduce((sum, l) => sum + (l.c1_bags || 0), 0);
+        const c2 = feedLogs.filter(l => l.action === 'Usage').reduce((sum, l) => sum + (l.c2_bags || 0), 0);
+        const c3 = feedLogs.filter(l => l.action === 'Usage').reduce((sum, l) => sum + (l.c3_bags || 0), 0);
+
+        // Fallback for legacy crops (if total > 0 but no granular logs)
+        const detailedTotal = c1 + c2 + c3;
+        const recordedTotalBags = Number((totalFeedKg / 50).toFixed(1));
+        const hasDetailedData = detailedTotal > 0;
+
         return {
             name: crop.name,
             final_count: (crop.total_chicks || 0) - totalMortality,
-            total_feed_bags: Number((totalFeedKg / 50).toFixed(1)),
+            total_feed_bags: recordedTotalBags,
+            c1_bags: c1,
+            c2_bags: c2,
+            c3_bags: c3,
+            has_detailed_data: hasDetailedData,
             peak_weight: peakWeight
         };
     }).reverse();
@@ -172,26 +195,83 @@ const Page = async () => {
                 <section className="p-8">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h2 className="text-xl font-bold text-neutral-900">Feed Consumption Comparison</h2>
-                            <p className="text-sm text-neutral-400 font-medium">Cumulative bags used for the last 10 crops</p>
+                            <h2 className="text-xl font-bold text-neutral-900">Feed Consumption Breakdown</h2>
+                            <p className="text-sm text-neutral-400 font-medium">Bags of C1, C2, and C3 used per crop</p>
                         </div>
                         <Utensils className="w-6 h-6 text-neutral-700" />
                     </div>
+
+                    {/* Legend */}
+                    <div className="flex gap-4 mb-6">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-neutral-300 rounded-sm"></div>
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase">C1</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-neutral-500 rounded-sm"></div>
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase">C2</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-neutral-900 rounded-sm"></div>
+                            <span className="text-[10px] font-bold text-neutral-500 uppercase">C3</span>
+                        </div>
+                    </div>
+
                     <div className="h-80 flex items-end justify-between px-2 gap-4">
                         {chartData.length > 0 ? chartData.map((crop, i) => {
-                            const maxVal = Math.max(...chartData.map(c => c.total_feed_bags), 1);
-                            const height = (crop.total_feed_bags / maxVal) * 100;
-                            return (
-                                <div key={i} className="group relative flex-1 flex flex-col items-center h-full justify-end">
-                                    <div className="absolute -top-10 bg-neutral-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10">
-                                        {crop.total_feed_bags.toLocaleString()} Bags
+                            // Determine max for scaling (either max total feed or current sum)
+                            const maxVal = Math.max(...chartData.map(c => Math.max(c.total_feed_bags, c.c1_bags + c.c2_bags + c.c3_bags)), 1);
+
+                            if (crop.has_detailed_data) {
+                                // Detailed Grouped Bars
+                                const h1 = (crop.c1_bags / maxVal) * 100;
+                                const h2 = (crop.c2_bags / maxVal) * 100;
+                                const h3 = (crop.c3_bags / maxVal) * 100;
+
+                                return (
+                                    <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group">
+                                        <div className="flex items-end gap-px h-full w-full justify-center">
+                                            {/* C1 Bar */}
+                                            {crop.c1_bags > 0 && (
+                                                <div className="w-full max-w-3 bg-neutral-300 rounded-t-sm relative group-bar" style={{ height: `${h1}%` }}>
+                                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10 pointer-events-none">
+                                                        C1: {crop.c1_bags}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* C2 Bar */}
+                                            {crop.c2_bags > 0 && (
+                                                <div className="w-full max-w-3 bg-neutral-500 rounded-t-sm relative group-bar" style={{ height: `${h2}%` }}>
+                                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10 pointer-events-none">
+                                                        C2: {crop.c2_bags}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {/* C3 Bar */}
+                                            {crop.c3_bags > 0 && (
+                                                <div className="w-full max-w-3 bg-neutral-900 rounded-t-sm relative group-bar" style={{ height: `${h3}%` }}>
+                                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10 pointer-events-none">
+                                                        C3: {crop.c3_bags}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
                                     </div>
-                                    <div className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-crosshair relative" style={{ height: `${height}%` }}>
-                                        <div className="absolute inset-0 bg-neutral-900/5 group-hover:bg-transparent"></div>
+                                );
+                            } else {
+                                // Fallback Single Bar
+                                const height = (crop.total_feed_bags / maxVal) * 100;
+                                return (
+                                    <div key={i} className="group relative flex-1 flex flex-col items-center h-full justify-end">
+                                        <div className="absolute -top-10 bg-neutral-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity font-bold whitespace-nowrap z-10">
+                                            Total: {crop.total_feed_bags} Bags
+                                        </div>
+                                        <div className="w-full max-w-9 bg-neutral-200 rounded-t-sm group-hover:bg-neutral-300 transition-all cursor-crosshair relative" style={{ height: `${height}%` }}></div>
+                                        <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
                                     </div>
-                                    <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
-                                </div>
-                            );
+                                );
+                            }
                         }) : (
                             <div className="w-full h-full flex items-center justify-center text-neutral-400 italic text-sm">Insufficient data for chart.</div>
                         )}
@@ -221,9 +301,9 @@ const Page = async () => {
                                             className="w-full bg-neutral-900 rounded-t-lg transition-all duration-700 relative flex items-start justify-center cursor-crosshair pt-2"
                                             style={{ height: `${height}%` }}
                                         >
-                                        <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {crop.peak_weight}g
-                                        </span>
+                                            <span className="text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {crop.peak_weight}g
+                                            </span>
                                         </div>
                                     </div>
                                     <span className="text-[8px] text-neutral-500 font-bold uppercase tracking-widest truncate w-full text-center" title={crop.name}>

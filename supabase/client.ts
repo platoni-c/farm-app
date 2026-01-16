@@ -6,6 +6,5 @@ export function createClient() {
         process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     )
 }
-
 // Export a default instance for backward compatibility - REMOVED to prevent build-time side effects
 // export const supabase = createClient()
