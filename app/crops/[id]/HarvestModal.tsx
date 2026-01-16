@@ -6,9 +6,10 @@ import { harvestCrop } from "./actions";
 
 interface HarvestModalProps {
     cropId: string;
+    liveBirds: number;
 }
 
-export function HarvestModal({ cropId }: HarvestModalProps) {
+export function HarvestModal({ cropId, liveBirds }: HarvestModalProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -24,10 +25,20 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
         setError(null);
 
         try {
+            // Calculate averages based on total weight / (liveBirds / 3)
+            // Input is in kg, stored average is in grams
+            const birdsPerGroup = Math.max(1, liveBirds / 3);
+
+            const calculateAverage = (totalKg: string) => {
+                if (!totalKg) return undefined;
+                const totalGrams = parseFloat(totalKg) * 1000;
+                return totalGrams / birdsPerGroup;
+            };
+
             await harvestCrop(cropId, {
-                avg_weight_heavy: weights.heavy ? parseFloat(weights.heavy) : undefined,
-                avg_weight_medium: weights.medium ? parseFloat(weights.medium) : undefined,
-                avg_weight_light: weights.light ? parseFloat(weights.light) : undefined,
+                avg_weight_heavy: calculateAverage(weights.heavy),
+                avg_weight_medium: calculateAverage(weights.medium),
+                avg_weight_light: calculateAverage(weights.light),
             });
             setIsOpen(false);
         } catch (err) {
@@ -58,7 +69,7 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
                             <Scale className="w-6 h-6 text-emerald-500" />
                             Final Weighing
                         </h3>
-                        <p className="text-neutral-500 mt-2 text-sm">Enter the average weight (in grams) for each group to complete the harvest.</p>
+                        <p className="text-neutral-500 mt-2 text-sm">Enter the <strong>TOTAL</strong> weight (in kg) for each group. The system will calculate averages based on {liveBirds} birds ({Math.round(liveBirds / 3)} per group).</p>
                     </div>
                     <button
                         onClick={() => setIsOpen(false)}
@@ -79,12 +90,12 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
                     <div className="space-y-4">
                         <div className="group">
                             <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2 group-focus-within:text-emerald-600 transition-colors">
-                                Heavy Group (g)
+                                Heavy Group Total (kg)
                             </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                placeholder="e.g. 2200"
+                                step="0.1"
+                                placeholder="e.g. 50"
                                 value={weights.heavy}
                                 onChange={e => setWeights({ ...weights, heavy: e.target.value })}
                                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-bold text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
@@ -93,12 +104,12 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
 
                         <div className="group">
                             <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2 group-focus-within:text-emerald-600 transition-colors">
-                                Medium Group (g)
+                                Medium Group Total (kg)
                             </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                placeholder="e.g. 1900"
+                                step="0.1"
+                                placeholder="e.g. 45"
                                 value={weights.medium}
                                 onChange={e => setWeights({ ...weights, medium: e.target.value })}
                                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-bold text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
@@ -107,12 +118,12 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
 
                         <div className="group">
                             <label className="block text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-2 group-focus-within:text-emerald-600 transition-colors">
-                                Light Group (g)
+                                Light Group Total (kg)
                             </label>
                             <input
                                 type="number"
-                                step="0.01"
-                                placeholder="e.g. 1500"
+                                step="0.1"
+                                placeholder="e.g. 40"
                                 value={weights.light}
                                 onChange={e => setWeights({ ...weights, light: e.target.value })}
                                 className="w-full bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 font-bold text-neutral-900 placeholder:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
@@ -149,3 +160,4 @@ export function HarvestModal({ cropId }: HarvestModalProps) {
         </div>
     );
 }
+

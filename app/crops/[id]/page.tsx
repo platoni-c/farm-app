@@ -78,7 +78,7 @@ export default async function CropDetailsPage({ params }: { params: { id: string
                     </div>
 
                     {!isCompleted && (
-                        <HarvestModal cropId={id} />
+                        <HarvestModal cropId={id} liveBirds={presentChicks} />
                     )}
                 </div>
             </header>

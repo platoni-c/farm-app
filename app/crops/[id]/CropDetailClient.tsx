@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react";
-import { Loader2, Plus, X, ClipboardList } from "lucide-react";
+import { Loader2, X, ClipboardList } from "lucide-react";
 import { recordDailyLog } from "./actions";
 
 export function DailyLogModal({ cropId }: { cropId: string }) {
