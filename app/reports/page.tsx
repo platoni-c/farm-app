@@ -175,22 +175,27 @@ const Page = async () => {
                         <BarChart className="w-6 h-6 text-neutral-700" />
                     </div>
                     <div className="h-64 overflow-x-auto">
-                        <div className="flex items-end gap-4 px-2 min-w-[800px] h-full">
+                        <div className="relative overflow-visible pt-10 h-full">
+                            <div className="flex items-end gap-4 px-2 h-full min-h-full">
                         {chartData.length > 0 ? chartData.map((crop, i) => {
                             const maxVal = Math.max(...chartData.map(c => c.final_count), 1);
                             const height = (crop.final_count / maxVal) * 100;
                             return (
                                 <div key={i} className="group relative flex flex-col items-center h-full justify-end w-16 shrink-0">
-                                    <div className="absolute -top-8 bg-neutral-900 text-white text-[10px] px-2 py-1 rounded opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity font-bold">
+                                    <div className="absolute -top-6 bg-neutral-900 text-white text-[10px] px-2 py-1 rounded lg:opacity-0 lg:group-hover:opacity-100 transition-opacity font-bold z-30 whitespace-nowrap pointer-events-none">
                                         {crop.final_count.toLocaleString()}
                                     </div>
-                                    <div className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-crosshair" style={{ height: `${height}%` }}></div>
+                                    <div
+                                      className="w-full bg-neutral-400 rounded-t-sm group-hover:bg-neutral-900 transition-all cursor-crosshair min-h-5"
+                                      style={{ height: `${height}%` }}
+                                    ></div>
                                     <span className="mt-4 text-[8px] font-black text-neutral-400 uppercase truncate w-full text-center">{crop.name}</span>
                                 </div>
                             );
                         }) : (
                             <div className="w-full h-full flex items-center justify-center text-neutral-400 italic text-sm">Insufficient data for chart.</div>
                         )}
+                            </div>
                         </div>
                     </div>
                 </section>
