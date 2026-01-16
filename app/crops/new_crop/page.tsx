@@ -114,13 +114,42 @@ export default function NewCropPage() {
             const c3Bags = Number(data.c3_feeds_consumed_bags || 0);
             const totalBags = c1Bags + c2Bags + c3Bags;
 
+            // Calculate Weight Averages from Totals
+            const totalChicks = parseInt(data.total_chicks as string) || 0;
+            const mortality = parseInt(data.total_mortality as string) || 0;
+            const liveBirds = Math.max(1, totalChicks - mortality);
+            const birdsPerGroup = Math.max(1, liveBirds / 3);
+
+            const heavyKg = parseFloat(data.total_weight_heavy_kg as string) || 0;
+            const mediumKg = parseFloat(data.total_weight_medium_kg as string) || 0;
+            const lightKg = parseFloat(data.total_weight_light_kg as string) || 0;
+            const totalKg = heavyKg + mediumKg + lightKg;
+
+            const avgHeavyG = (heavyKg * 1000) / birdsPerGroup;
+            const avgMediumG = (mediumKg * 1000) / birdsPerGroup;
+            const avgLightG = (lightKg * 1000) / birdsPerGroup;
+            const overallAvgG = (totalKg * 1000) / liveBirds;
+
+            // Update local cropData object to include weights before any other ops if needed, 
+            // but crop is already inserted. We need to update the crop record with the calculated weights.
+            if (heavyKg > 0 || mediumKg > 0 || lightKg > 0) {
+                await supabase
+                    .from('crops')
+                    .update({
+                        avg_weight_heavy: avgHeavyG,
+                        avg_weight_medium: avgMediumG,
+                        avg_weight_light: avgLightG
+                    })
+                    .eq('id', crop.id);
+            }
+
             // Create a summary Daily Log entry
             const summaryLog = {
                 crop_id: crop.id,
                 log_date: data.actual_harvest_date,
                 mortality: Number(data.total_mortality || 0),
                 feed_consumed_kg: totalBags * 50, // Convert bags to kg
-                avg_weight_g: Number(data.avg_harvest_weight || 0),
+                avg_weight_g: overallAvgG > 0 ? overallAvgG : undefined,
                 notes: 'Historical Data Summary'
             };
 
@@ -298,8 +327,17 @@ export default function NewCropPage() {
                             <div className="md:col-span-2 space-y-8 border-t border-neutral-100 pt-8 mt-4">
                                 <h3 className="text-lg font-bold text-neutral-900 uppercase tracking-tight">Performance Summary</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <label className="text-sm font-bold text-neutral-500 uppercase tracking-wider block mb-2">
+                                            Total Harvest Weight (kg) - Split into 3 Groups
+                                        </label>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                            <InputField label="Heavy Group (kg)" name="total_weight_heavy_kg" type="number" placeholder="0" required={isHistorical} />
+                                            <InputField label="Medium Group (kg)" name="total_weight_medium_kg" type="number" placeholder="0" required={isHistorical} />
+                                            <InputField label="Light Group (kg)" name="total_weight_light_kg" type="number" placeholder="0" required={isHistorical} />
+                                        </div>
+                                    </div>
                                     <InputField label="Total Mortality" name="total_mortality" type="number" placeholder="0" required={isHistorical} />
-                                    <InputField label="Avg Harvest Weight (g)" name="avg_harvest_weight" type="number" placeholder="0" required={isHistorical} />
                                 </div>
 
                                 <div>
