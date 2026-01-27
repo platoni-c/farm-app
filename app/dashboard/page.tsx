@@ -312,7 +312,7 @@ const Page = async (props: { searchParams: Promise<{ period?: string }> }) => {
                             const arrival = new Date(activeCrops[0].arrival_date);
                             const now = new Date();
                             const diffTime = now.getTime() - arrival.getTime();
-                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24) - 1);
                             return <span className="text-neutral-900 font-medium"> - Day {diffDays}</span>
                         })()}
                     </h1>
